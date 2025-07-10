@@ -228,8 +228,8 @@ def generate_launch_description():
 
         yolo_node_cmd = Node(
             package="yolo_ros",
-            executable="yolo_node",
-            name="yolo_node",
+            executable="comp_yolo_node",
+            name="comp_yolo_node",
             namespace=namespace,
             parameters=[
                 {
