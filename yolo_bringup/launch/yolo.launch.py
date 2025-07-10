@@ -210,7 +210,7 @@ def generate_launch_description():
         use_debug = LaunchConfiguration("use_debug")
         use_debug_cmd = DeclareLaunchArgument(
             "use_debug",
-            default_value="True",
+            default_value="False",
             description="Whether to activate the debug node",
         )
 
@@ -298,6 +298,19 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression([use_debug])),
         )
 
+        tracking_visualizer_node_cmd = Node(
+            package="yolo_ros",
+            executable="tracking_visualizer_node",
+            name="tracking_visualizer_node",
+            namespace=namespace,
+            parameters=[{"image_reliability": image_reliability}],
+            remappings=[
+                ("dbg_image/compressed", "dbg_image/compressed"),
+                ("tracking", "tracking"),
+            ],
+            condition=IfCondition(PythonExpression([str(use_tracking)])),
+        )
+
         return (
             model_type_cmd,
             model_cmd,
@@ -329,6 +342,7 @@ def generate_launch_description():
             tracking_node_cmd,
             detect_3d_node_cmd,
             debug_node_cmd,
+            tracking_visualizer_node_cmd,
         )
 
     use_tracking = LaunchConfiguration("use_tracking")

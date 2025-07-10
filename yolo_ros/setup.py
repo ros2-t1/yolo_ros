@@ -24,6 +24,7 @@ setup(
             "debug_node = yolo_ros.debug_node:main",
             "tracking_node = yolo_ros.tracking_node:main",
             "detect_3d_node = yolo_ros.detect_3d_node:main",
+            "tracking_visualizer_node = yolo_ros.tracking_visualizer_node:main",
         ],
     },
 )

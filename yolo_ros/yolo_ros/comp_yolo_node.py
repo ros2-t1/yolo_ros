@@ -15,6 +15,7 @@
 
 
 import cv2
+import numpy as np
 from typing import List, Dict
 from cv_bridge import CvBridge
 
@@ -69,6 +70,8 @@ class YoloNode(LifecycleNode):
         self.declare_parameter("agnostic_nms", False)
         self.declare_parameter("retina_masks", False)
 
+        self.declare_parameter("enable_debug", True)
+
         self.type_to_model = {"YOLO": YOLO, "World": YOLOWorld}
 
     def on_configure(self, state: LifecycleState) -> TransitionCallbackReturn:
@@ -111,6 +114,10 @@ class YoloNode(LifecycleNode):
             self.get_parameter("image_reliability").get_parameter_value().integer_value
         )
 
+        self.enable_debug = (
+            self.get_parameter("enable_debug").get_parameter_value().bool_value
+        )
+
         # detection pub
         self.image_qos_profile = QoSProfile(
             reliability=self.reliability,
@@ -121,6 +128,10 @@ class YoloNode(LifecycleNode):
 
         self._pub = self.create_lifecycle_publisher(DetectionArray, "detections", 10)
         self.cv_bridge = CvBridge()
+
+        if self.enable_debug:
+            self._dbg_pub = self.create_lifecycle_publisher(
+                CompressedImage, "dbg_image/compressed", 10)
 
         super().on_configure(state)
         self.get_logger().info(f"[{self.get_name()}] Configured")
@@ -185,6 +196,9 @@ class YoloNode(LifecycleNode):
         self.get_logger().info(f"[{self.get_name()}] Cleaning up...")
 
         self.destroy_publisher(self._pub)
+
+        if self.enable_debug:
+            self.destroy_publisher(self._dbg_pub)
 
         del self.image_qos_profile
 
@@ -329,9 +343,8 @@ class YoloNode(LifecycleNode):
         if self.enable:
 
             # convert image + predict
-            cv_image = self.cv_bridge.imgmsg_to_cv2(
-                msg, desired_encoding=self.yolo_encoding
-            )
+            cv_image = cv2.imdecode(np.frombuffer(
+                msg.data, np.uint8), cv2.IMREAD_COLOR)
             results = self.yolo.predict(
                 source=cv_image,
                 verbose=False,
@@ -383,6 +396,14 @@ class YoloNode(LifecycleNode):
             # publish detections
             detections_msg.header = msg.header
             self._pub.publish(detections_msg)
+
+            if self.enable_debug:
+                dbg_msg = CompressedImage()
+                dbg_msg.header = msg.header
+                dbg_msg.format = "jpeg"
+                dbg_msg.data = np.array(cv2.imencode(
+                    ".jpg", results.plot())[1]).tobytes()
+                self._dbg_pub.publish(dbg_msg)
 
             del results
             del cv_image

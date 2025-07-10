@@ -1,4 +1,5 @@
 # Copyright (C) 2023 Miguel Ángel González Santamarta
+# Copyright (C) 2025 Gemini
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,18 +36,19 @@ def generate_launch_description():
                     )
                 ),
                 launch_arguments={
-                    "model": LaunchConfiguration("model", default="yolov9c.pt"),
+                    "model": LaunchConfiguration("model", default="yolov8m.pt"),
                     "tracker": LaunchConfiguration("tracker", default="bytetrack.yaml"),
                     "device": LaunchConfiguration("device", default="cuda:0"),
                     "enable": LaunchConfiguration("enable", default="True"),
                     "threshold": LaunchConfiguration("threshold", default="0.5"),
                     "input_image_topic": LaunchConfiguration(
-                        "input_image_topic", default="/camera/rgb/image_raw"
+                        "input_image_topic", default="/image_raw/compressed"
                     ),
                     "image_reliability": LaunchConfiguration(
                         "image_reliability", default="1"
                     ),
                     "namespace": LaunchConfiguration("namespace", default="yolo"),
+                    "use_tracking": LaunchConfiguration("use_tracking", default="False"),
                 }.items(),
             )
         ]
